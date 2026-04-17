@@ -49,6 +49,20 @@ services:
     depends_on:
       - pg-primary
 
+  rails-app:
+    build:
+      context: ./rails-app
+      dockerfile: Dockerfile
+    container_name: rails-app
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+    depends_on:
+      - pg-primary
+      - pg-replica1
+      - pg-replica2
+
 volumes:
   pg-primary-data:
   pg-replica1-data:
