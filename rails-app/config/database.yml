@@ -1,5 +1,5 @@
 default: &default
-  adapter: postgresql
+  adapter: postgresql_proxy
   encoding: unicode
   pool: 5
   username: postgres
@@ -12,5 +12,6 @@ development:
     host: pg-primary
   primary_replica:
     <<: *default
+    adapter: postgresql
     host: pg-replicas
     replica: true
