@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # Long Query Monitor Script
-# Sends SELECT pg_sleep(10) every 10 seconds to test in-flight query behavior
+# Sends GET /api/sleep_query every 10 seconds to test in-flight query behavior
+# using the Rails API endpoint.
 
-PGDOG_PORT=6432
-PGDOG_HOST=127.0.0.1
-USER=postgres
-DB=appdb
+RAILS_HOST=localhost
+RAILS_PORT=3000
+ENDPOINT="http://${RAILS_HOST}:${RAILS_PORT}/api/sleep_query"
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║          PGDOG LONG QUERY (SLEEP) MONITOR                   ║"
-echo "║     Sends SELECT pg_sleep(10) every 10 seconds              ║"
+echo "║          LONG QUERY (SLEEP) MONITOR                         ║"
+echo "║     Sends GET /api/sleep_query (sleeps for 20s)             ║"
 echo "║     Press Ctrl+C to stop                                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -18,13 +18,22 @@ echo ""
 while true; do
     timestamp=$(date +%H:%M:%S)
     
-    echo "[$timestamp] Sending 4 concurrent SELECT pg_sleep(10)..."
+    echo "[$timestamp] Sending 4 concurrent sleep_query requests..."
     
     for i in {1..4}; do
         (
-            PGPASSWORD=secret psql -h $PGDOG_HOST -p $PGDOG_PORT -U $USER -d $DB -c "SELECT inet_server_addr() as node, pg_sleep(20);" 2>&1 | while read line; do
-                echo "    [$timestamp Q$i Result] $line"
-            done
+            response=$(curl -s --max-time 25 "$ENDPOINT" 2>/dev/null)
+            
+            if [ -z "$response" ]; then
+                echo "    [$timestamp Q$i Result] ERROR: No response or timeout"
+            else
+                node=$(echo "$response" | grep -o '"node":"[^"]*"' | cut -d'"' -f4)
+                if [ -n "$node" ]; then
+                    echo "    [$timestamp Q$i Result] Executed on node: $node"
+                else
+                    echo "    [$timestamp Q$i Result] ERROR: Parsing failed -> $response"
+                fi
+            fi
         ) &
     done
     
