@@ -31,6 +31,10 @@ services:
     command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     depends_on:
       - pg-primary
+    networks:
+      default:
+        aliases:
+          - pg-replicas
 
   pg-replica2:
     image: postgres:17
@@ -48,6 +52,10 @@ services:
     command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     depends_on:
       - pg-primary
+    networks:
+      default:
+        aliases:
+          - pg-replicas
 
   rails-app:
     build:

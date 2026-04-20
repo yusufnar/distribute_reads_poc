@@ -12,5 +12,5 @@ development:
     host: pg-primary
   primary_replica:
     <<: *default
-    host: pg-replica1
+    host: pg-replicas
     replica: true
