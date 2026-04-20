@@ -11,6 +11,8 @@ RUN bundle install
 
 COPY . .
 
+RUN mkdir -p tmp/pids
+
 EXPOSE 3000
 
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
