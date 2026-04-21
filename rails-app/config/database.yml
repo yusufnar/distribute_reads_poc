@@ -15,7 +15,7 @@ development:
     adapter: postgresql
     # Multiple replica hosts for client-side load balancing.
     # libpq randomly picks one host when opening each new read connection.
-    host: pg-replica1,pg-replica2
-    load_balance_hosts: random
-    target_session_attrs: any
+    host: pg-replica1
+    #load_balance_hosts: random
+    #target_session_attrs: any
     replica: true

@@ -4,7 +4,7 @@ module Api
     # Uses distribute_reads to automatically route to replica
     # Falls back to primary when replication lag > 1 second
     def show
-      result = distribute_reads(max_lag: 1, failover: true, lag_failover: true) do
+      result = distribute_reads do
         db_info = ApplicationRecord.connection.select_all(<<-SQL).first
           SELECT
             inet_server_addr() AS server_ip,
@@ -30,10 +30,7 @@ module Api
         database_name: result["database_name"],
         replication_lag_seconds: result["replication_lag_seconds"]&.to_f&.round(3),
         connected_to: result["is_replica"] ? "REPLICA" : "PRIMARY",
-        distribute_reads_config: {
-          max_lag: 1,
-          lag_failover: true
-        }
+        distribute_reads_config: DistributeReads.default_options.slice(:max_lag, :failover, :lag_failover)
       }
     end
 
@@ -45,7 +42,7 @@ module Api
       replica2_info = query_database("pg-replica2", 5432)
 
       # Also show where distribute_reads would route
-      distribute_reads_result = distribute_reads(max_lag: 1, failover: true, lag_failover: true) do
+      distribute_reads_result = distribute_reads do
         ApplicationRecord.connection.select_all(<<-SQL).first
           SELECT
             inet_server_addr() AS server_ip,
@@ -66,7 +63,7 @@ module Api
 
     # GET /api/sleep_query
     def sleep_query
-      result = distribute_reads(max_lag: 1, failover: true, lag_failover: true) do
+      result = distribute_reads do
         db_info = ApplicationRecord.connection.select_all(<<-SQL).first
           SELECT
             inet_server_addr() AS node,
